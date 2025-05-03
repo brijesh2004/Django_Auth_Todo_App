@@ -39,15 +39,15 @@ class TodoSerializer(serializers.ModelSerializer):
     class Meta:
         model = TodoModel
         fields = ['id', 'title', 'description', 'user', 'is_completed', 'created_at', 'updated_at']
-        read_only_fields = ['user', 'is_completed', 'created_at', 'updated_at']
+        read_only_fields = ['user', 'created_at']
         
 
-    def validate(self, data):
-        if len(data.get('title', '')) < 1:
-            raise serializers.ValidationError("Title must be at least 1 character long.")
-        if len(data.get('description', '')) < 1:
-            raise serializers.ValidationError("Description must be at least 1 character long.")
-        return data
+    # def validate(self, data):
+    #     if len(data.get('title', '')) < 1:
+    #         raise serializers.ValidationError("Title must be at least 1 character long.")
+    #     if len(data.get('description', '')) < 1:
+    #         raise serializers.ValidationError("Description must be at least 1 character long.")
+    #     return data
 
     def create(self, validated_data):
         # user is not in validated_data because it's read-only; we add it manually

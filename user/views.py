@@ -8,8 +8,10 @@ from rest_framework.authtoken.models import Token
 from django.contrib.auth import authenticate
 from rest_framework.permissions import IsAuthenticated
 from .models import TodoModel
+from django.utils.timezone import now
 
 class UserRegisterView(APIView):
+    permission_classes = []
     def post(self , request):
         data = request.data
         serializer = RegisterSerializer(data=data)
@@ -29,9 +31,11 @@ class UserRegisterView(APIView):
     
 
 class UserLoginView(APIView):
+    permission_classes = []
 
     def post(self , request):
         data = request.data 
+        print("data" , data)
         serializer = LoginSerializer(data=data)
         if not serializer.is_valid():
             return Response({"error":serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
@@ -66,7 +70,7 @@ class TodoListView(APIView):
     def delete(self, request):
         todo_id = request.GET.get('id')
         if not todo_id:
-          return Response({"error": "Todo ID is required"}, status=status.HTTP_400_BAD_REQUEST)
+           return Response({"error": "Todo ID is required"}, status=status.HTTP_400_BAD_REQUEST)
     
         try:
            todo = request.user.todos.get(id=todo_id)
@@ -74,5 +78,25 @@ class TodoListView(APIView):
            return Response({"message": "Todo deleted successfully"}, status=status.HTTP_200_OK)
         except TodoModel.DoesNotExist:
            return Response({"error": "Todo not found"}, status=status.HTTP_404_NOT_FOUND)
+        
+    def patch(self, request):
+        todo_id = request.GET.get('id')
+        if not todo_id:
+           return Response({"error": "Todo ID is required"}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+           todo = request.user.todos.get(id=todo_id)
+        except TodoModel.DoesNotExist:
+           return Response({"error": "Todo not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        data = request.data.copy()
+        data['updated_at'] = now() 
+
+        serializer = TodoSerializer(todo, data=data, partial=True)
+        if not serializer.is_valid():
+           return Response({"error": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+
+        serializer.save()  
+        return Response({"data": serializer.data, "message": "Todo updated successfully"}, status=status.HTTP_200_OK)
 
 
